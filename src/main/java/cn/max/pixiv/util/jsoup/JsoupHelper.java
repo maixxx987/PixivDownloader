@@ -1,10 +1,9 @@
 package cn.max.pixiv.util.jsoup;
 
-import cn.max.pixiv.common.Constant;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 /**
  * @author MaxStar
@@ -13,36 +12,27 @@ import org.jsoup.select.Elements;
 public class JsoupHelper {
 
     /**
-     * 获取原图地址
-     * 先从解析获取图片的src，然后拼成正确的原图地址
-     * eg.
-     * page src: https://i.pximg.net/c/600x600/img-master/img/2019/05/16/13/09/10/74751807_p0_master1200.jpg
-     * origin:   https://i.pximg.net/img-original/img/2019/05/16/13/09/10/74751807_p0.png
+     * parse origin picture url from content by Jsoup
      *
-     * @param content   网页代码
-     * @param className div的class名
+     * eg.
+     * page src: https://www.pixiv.net/artworks/63472776
+     * origin:   https://i.pximg.net/img-original/img/2017/06/20/01/14/35/63472776_p0.png
+     *
+     * @param content page source
+     * @param id      picture ID
      * @return
      */
-    public static String getOriginURL(String content, String className) {
+    public static String getOriginUrl(String content, String id) {
         Document doc = Jsoup.parse(content);
-        Elements divs = doc.getElementsByClass(className);
-        for (Element div : divs) {
-            Elements imgs = div.getElementsByTag("img");
-            for (Element img : imgs) {
 
-                String imgSrc = img.attr("src");
-                System.out.println("Thumbnail src = " + imgSrc);
+        // origin url json string
+        String preLoadDataJsonStr = doc.select("meta[name=preload-data]").get(0).attr("content");
 
-                // 拼接原图地址（真）
-                String date = imgSrc.substring(imgSrc.indexOf("/img/"), imgSrc.indexOf("_p"));
-                String _p = imgSrc.substring(imgSrc.indexOf("_p"), imgSrc.indexOf("_p") + 3);
-                String format = imgSrc.substring(imgSrc.lastIndexOf("."));
-                String originUrl = Constant.ORIGIN_URL_PREFIX + date + _p + format;
-                System.out.println(originUrl);
-                return originUrl;
-            }
-        }
+        JSONObject preLoadDataJsonObject = JSON.parseObject(preLoadDataJsonStr);
 
-        return null;
+        // illust -> urls -> original
+        String originSrc = preLoadDataJsonObject.getJSONObject("illust").getJSONObject(id).getJSONObject("urls").getString("original");
+        System.out.println(originSrc);
+        return originSrc;
     }
 }

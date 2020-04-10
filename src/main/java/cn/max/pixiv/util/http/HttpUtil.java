@@ -29,8 +29,90 @@ import java.util.concurrent.TimeUnit;
 public class HttpUtil {
 
     private static PoolingHttpClientConnectionManager connectionManager;
-    private static CloseableHttpClient httpClient; // 发送请求的客户端单例
-    private static final Object LOCK = new Object();
+    private static CloseableHttpClient httpClient = getHttpClient();
+
+    /**
+     * 创建Http请求(有头文件)
+     *
+     * @param url     请求连接
+     * @param headers 请求头
+     * @return 返回实体
+     */
+    private static HttpEntity httpGet(String url, Map<String, String> headers) {
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.addHeader("User-Agent", Constant.USER_AGENT);
+
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach(httpGet::setHeader);
+        }
+
+        CloseableHttpResponse response;
+        try {
+            response = httpClient.execute(httpGet);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        if (response.getStatusLine().getStatusCode() != 200) {
+            System.out.println("status code :" + response.getStatusLine().getStatusCode());
+            return null;
+        }
+
+        HttpEntity entity = response.getEntity();
+
+        if (entity == null) {
+            System.out.println("entity is null");
+            return null;
+        }
+
+        return entity;
+    }
+
+    /**
+     * 获取页面内容
+     *
+     * @param url 请求连接
+     * @return 页面内容
+     */
+    public static String getContent(String url) {
+        HttpEntity entity = httpGet(url, null);
+        try {
+            if (entity != null && entity.getContent() != null) {
+                String content = EntityUtils.toString(entity);
+                EntityUtils.consume(entity);
+                return content;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("error");
+            return null;
+        }
+    }
+
+    /**
+     * 获取InputStream(转为图片)
+     *
+     * @param url 请求路径
+     * @return inputStream
+     */
+    public static InputStream getInputStream(String url, Map<String, String> headers) {
+        HttpEntity entity = httpGet(url, headers);
+        if (entity != null) {
+            try {
+                return entity.getContent();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("get inputStream error");
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * 配置HttpClient的具体方法
@@ -39,7 +121,7 @@ public class HttpUtil {
      */
     private static CloseableHttpClient createHttpClient() {
         // 设置代理
-        HttpHost proxy = new HttpHost("127.0.0.1", 1080);
+        HttpHost proxy = new HttpHost("127.0.0.1", 1081);
 
         // 设置协议http和https对应的处理socket链接工厂的对象
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -77,107 +159,12 @@ public class HttpUtil {
      * @return httpClient
      */
     private static CloseableHttpClient getHttpClient() {
-        if (httpClient == null) {
-            synchronized (LOCK) {
-                if (httpClient == null) {
-                    httpClient = createHttpClient();
-                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-                        connectionManager.closeExpiredConnections();
-                        connectionManager.closeIdleConnections(HttpConfig.IDLE, TimeUnit.MILLISECONDS);
-                    }, HttpConfig.INITIAL_DELAY, HttpConfig.PERIOD, TimeUnit.MILLISECONDS);
-                }
-            }
-        }
+        httpClient = createHttpClient();
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            connectionManager.closeExpiredConnections();
+            connectionManager.closeIdleConnections(HttpConfig.IDLE, TimeUnit.MILLISECONDS);
+        }, HttpConfig.INITIAL_DELAY, HttpConfig.PERIOD, TimeUnit.MILLISECONDS);
         return httpClient;
-    }
-
-    /**
-     * 创建Http请求(有头文件)
-     *
-     * @param url     请求连接
-     * @param headers 请求头
-     * @return 返回实体
-     */
-    private static HttpEntity httpGet(String url, Map<String, String> headers) {
-//        HttpClient httpClient = HttpUtil.getHttpClient();
-        HttpGet httpGet = new HttpGet(url);
-        httpGet.setHeader("User-Agent", Constant.USER_AGENT);
-
-        if (headers != null && !headers.isEmpty()) {
-            headers.forEach(httpGet::setHeader);
-        }
-
-        CloseableHttpResponse response;
-        try {
-            response = getHttpClient().execute(httpGet);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        if (response.getStatusLine().getStatusCode() != 200) {
-            System.out.println("status code :" + response.getStatusLine().getStatusCode());
-            return null;
-        }
-
-        HttpEntity entity = response.getEntity();
-
-        if (entity == null) {
-            System.out.println("entity is null");
-            return null;
-        }
-
-//        try {
-//            response.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        return entity;
-    }
-
-    /**
-     * 获取页面内容
-     *
-     * @param url 请求连接
-     * @return 页面内容
-     */
-    public static String getContent(String url) {
-        HttpEntity entity = httpGet(url, null);
-        try {
-            if (entity != null && entity.getContent() != null) {
-                String content = EntityUtils.toString(entity);
-                EntityUtils.consume(entity);
-                return content;
-
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("error");
-            return null;
-        }
-    }
-
-    /**
-     * 获取InputStream(转为图片)
-     *
-     * @param url 请求路径
-     * @return inputStream
-     */
-    public static InputStream getInputStream(String url, Map<String, String> headers) {
-        HttpEntity entity = httpGet(url, headers);
-        if (entity != null) {
-            try {
-                return entity.getContent();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("error");
-                return null;
-            }
-        } else {
-            return null;
-        }
     }
 
 }

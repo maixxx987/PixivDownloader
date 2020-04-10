@@ -13,10 +13,10 @@ import java.io.InputStream;
 public class IOUtil {
 
     /**
-     * inputStream 转为图片，储存在本地
+     * inputStream transfer picture
      *
      * @param inputStream inputStream
-     * @param path        存储路径
+     * @param path        download path
      */
     public static void inputStream2Picture(InputStream inputStream, String path) {
         try {
