@@ -13,7 +13,7 @@ import java.io.InputStream;
 public class IOUtil {
 
     /**
-     * inputStream transfer picture
+     * inputStream转图片
      *
      * @param inputStream inputStream
      * @param path        download path
