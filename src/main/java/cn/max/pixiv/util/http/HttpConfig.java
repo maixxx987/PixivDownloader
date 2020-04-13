@@ -1,5 +1,6 @@
 package cn.max.pixiv.util.http;
 
+import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -64,13 +65,14 @@ public class HttpConfig {
      * @return httpClient
      */
     private static CloseableHttpClient createHttpClient() {
-        // 设置协议http和https对应的处理socket链接工厂的对象
+        // 设置代理
+        HttpHost proxy = new HttpHost("127.0.0.1", 1081);
+
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("https", SSLConnectionSocketFactory.getSocketFactory())
                 .register("http", PlainConnectionSocketFactory.getSocketFactory())
                 .build();
 
-        // 连接池
         connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
 
         // 最大连接数
@@ -81,6 +83,7 @@ public class HttpConfig {
 
         // httpClient配置
         RequestConfig defaultRequestConfig = RequestConfig.custom()
+//                .setProxy(proxy)
                 .setConnectionRequestTimeout(HttpConfig.GET_CONNECTION_TIME_OUT)
                 .setConnectTimeout(HttpConfig.CONNECTION_TIME_OUT)
                 .setSocketTimeout(HttpConfig.SOCKET_TIME_OUT)

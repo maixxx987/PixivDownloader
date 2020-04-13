@@ -17,6 +17,9 @@ import java.util.Map;
  */
 public class HttpUtil {
 
+    private static final int STATUS_CODE_OK = 200;
+    private static final int STATUS_CODE_NOT_FOUND = 404;
+
     /**
      * 创建Http请求(有头文件)
      *
@@ -24,7 +27,7 @@ public class HttpUtil {
      * @param headers 请求头
      * @return 返回实体
      */
-    private static HttpEntity httpGet(String url, Map<String, String> headers) {
+    private static HttpEntity httpGet(String url, Map<String, String> headers) throws IOException {
         HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader("User-Agent", Constant.USER_AGENT);
 
@@ -32,16 +35,10 @@ public class HttpUtil {
             headers.forEach(httpGet::setHeader);
         }
 
-        CloseableHttpResponse response;
         CloseableHttpClient httpClient = HttpConfig.getHttpClient();
-        try {
-            response = httpClient.execute(httpGet);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        CloseableHttpResponse response = httpClient.execute(httpGet);
 
-        if (response.getStatusLine().getStatusCode() != 200) {
+        if (response.getStatusLine().getStatusCode() == STATUS_CODE_NOT_FOUND) {
             System.out.println("status code :" + response.getStatusLine().getStatusCode());
             return null;
         }
@@ -62,21 +59,17 @@ public class HttpUtil {
      * @param url 请求连接
      * @return 页面内容
      */
-    public static String getContent(String url) {
+    public static String getContent(String url) throws IOException {
         HttpEntity entity = httpGet(url, null);
-        try {
-            if (entity != null && entity.getContent() != null) {
-                String content = EntityUtils.toString(entity);
-                EntityUtils.consume(entity);
-                return content;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("error");
+
+        if (entity != null && entity.getContent() != null) {
+            String content = EntityUtils.toString(entity);
+            EntityUtils.consume(entity);
+            return content;
+        } else {
             return null;
         }
+
     }
 
     /**
@@ -85,7 +78,7 @@ public class HttpUtil {
      * @param url 请求路径
      * @return inputStream
      */
-    public static InputStream getInputStream(String url, Map<String, String> headers) {
+    public static InputStream getInputStream(String url, Map<String, String> headers) throws IOException {
         HttpEntity entity = httpGet(url, headers);
         if (entity != null) {
             try {

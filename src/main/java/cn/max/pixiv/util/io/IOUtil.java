@@ -24,7 +24,7 @@ public class IOUtil {
             inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("input stream to picture error");
         }
+
     }
 }
