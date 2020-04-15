@@ -1,14 +1,24 @@
 package cn.max.pixiv.util.http;
 
 import cn.max.pixiv.common.Constant;
+import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -29,14 +39,16 @@ public class HttpUtil {
      */
     private static HttpEntity httpGet(String url, Map<String, String> headers) throws IOException {
         HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader("User-Agent", Constant.USER_AGENT);
+        httpGet.addHeader("accept", Constant.ACCEPT);
+        httpGet.addHeader("accept-encoding", Constant.ACCEPT_ENCODING);
+        httpGet.addHeader("accept-language", Constant.ACCEPT_LANGUAGE);
+        httpGet.addHeader("user-agent", Constant.USER_AGENT);
 
         if (headers != null && !headers.isEmpty()) {
-            headers.forEach(httpGet::setHeader);
+            headers.forEach(httpGet::addHeader);
         }
 
-        CloseableHttpClient httpClient = HttpConfig.getHttpClient();
-        CloseableHttpResponse response = httpClient.execute(httpGet);
+        CloseableHttpResponse response = HttpConfig.getHttpClient().execute(httpGet);
 
         if (response.getStatusLine().getStatusCode() == STATUS_CODE_NOT_FOUND) {
             System.out.println("status code :" + response.getStatusLine().getStatusCode());
@@ -91,5 +103,37 @@ public class HttpUtil {
         } else {
             return null;
         }
+    }
+
+    public static String uploadFile(String url, String filePath) {
+        HttpPost httpPost = new HttpPost(url);
+        httpPost.addHeader("Accept", Constant.ACCEPT);
+        httpPost.addHeader("Accept-Encoding", Constant.ACCEPT_ENCODING);
+        httpPost.addHeader("Accept-Language", Constant.ACCEPT_LANGUAGE);
+        httpPost.addHeader("User-Agent", Constant.USER_AGENT);
+
+        CloseableHttpResponse response = null;
+        String resultString = null;
+        try {
+            FileBody file = new FileBody(new File(filePath));
+
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addPart("file", file);
+            builder.setCharset(StandardCharsets.UTF_8);
+            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+
+            HttpEntity reqEntity = builder.build();
+            httpPost.setEntity(reqEntity);
+
+            // 发起请求 并返回请求的响应
+            response = HttpConfig.getHttpClient().execute(httpPost);
+            resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+            EntityUtils.consume(response.getEntity());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return resultString;
     }
 }

@@ -13,7 +13,8 @@ public class ThreadPool {
     /**
      * clean http thread pool
      */
-    public static ScheduledExecutorService scheduledPool = new ScheduledThreadPoolExecutor(1, new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build());
+    public static ScheduledExecutorService scheduledPool = new ScheduledThreadPoolExecutor(1,
+            new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build());
 
     /**
      * crawler pool
@@ -23,5 +24,5 @@ public class ThreadPool {
             60 * 1000,
             TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(),
-            new BasicThreadFactory.Builder().namingPattern("crawler-pool-%d").build());
+            new BasicThreadFactory.Builder().namingPattern("crawler-pool-%d").daemon(true).build());
 }

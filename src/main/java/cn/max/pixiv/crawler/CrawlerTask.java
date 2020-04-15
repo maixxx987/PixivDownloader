@@ -17,7 +17,6 @@ import java.util.Map;
 public class CrawlerTask {
 
     public static void task(Image image) throws IOException {
-        System.out.println(Thread.currentThread() + "开始运行");
         if (image.getOriginUrl() == null) {
             parse(image);
         }
@@ -36,7 +35,7 @@ public class CrawlerTask {
         String content = HttpUtil.getContent(url);
 
         if (content != null && !content.isBlank()) {
-            String originUrl = JsoupHelper.getOriginUrl(content, String.valueOf(id));
+            String originUrl = JsoupHelper.parseImgOriginUrl(content, String.valueOf(id));
             if (originUrl != null) {
                 image.setOriginUrl(originUrl);
             }
@@ -66,7 +65,7 @@ public class CrawlerTask {
 
 
         while (inputStream != null) {
-            IOUtil.inputStream2Picture(inputStream, ("G:\\test\\" + id + "_p" + currNum + suffix));
+            IOUtil.inputStream2Picture(inputStream, ("src/test/resources/" + id + "_p" + currNum + suffix));
             System.out.println("文件名： " + id + "_p" + currNum + suffix);
 
             // get next picture inputStream

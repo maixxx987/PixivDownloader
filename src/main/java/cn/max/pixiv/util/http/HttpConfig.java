@@ -83,7 +83,7 @@ public class HttpConfig {
 
         // httpClient配置
         RequestConfig defaultRequestConfig = RequestConfig.custom()
-//                .setProxy(proxy)
+                .setProxy(proxy)
                 .setConnectionRequestTimeout(HttpConfig.GET_CONNECTION_TIME_OUT)
                 .setConnectTimeout(HttpConfig.CONNECTION_TIME_OUT)
                 .setSocketTimeout(HttpConfig.SOCKET_TIME_OUT)
