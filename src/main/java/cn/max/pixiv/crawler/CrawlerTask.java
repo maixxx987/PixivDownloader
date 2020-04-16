@@ -75,7 +75,6 @@ public class CrawlerTask {
             System.out.println(currNum + " : " + originSrc);
 
             // download picture
-
             inputStream = HttpUtil.getInputStream(originSrc, Map.of("Referer", image.getUrl()));
 
         }

@@ -19,9 +19,9 @@ public class ThreadPool {
     /**
      * crawler pool
      */
-    public static ExecutorService crawlerPool = new ThreadPoolExecutor(5,
-            20,
-            60 * 1000,
+    public static ExecutorService crawlerPool = new ThreadPoolExecutor(3,
+            10,
+            5 * 1000,
             TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(),
             new BasicThreadFactory.Builder().namingPattern("crawler-pool-%d").daemon(true).build());

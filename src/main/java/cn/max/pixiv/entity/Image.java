@@ -8,12 +8,12 @@ import java.io.InputStream;
  */
 public class Image {
 
-    private long id;
-    private long name;
+    private Long id;
+    private String name;
     private String url;
     private String originUrl;
     private int currNum = 0;
-    private long artistId;
+    private Long artistId;
     private String artistName;
     private String artistUrl;
     private InputStream simpleImage;
@@ -21,23 +21,27 @@ public class Image {
     public Image() {
     }
 
-    public Image(long id) {
+    public Image(Long id) {
         this.id = id;
     }
 
-    public long getId() {
+    public Image(Integer id) {
+        this.id = Long.valueOf(id);
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public long getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(long name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -65,11 +69,11 @@ public class Image {
         this.currNum = currNum;
     }
 
-    public long getArtistId() {
+    public Long getArtistId() {
         return artistId;
     }
 
-    public void setArtistId(long artistId) {
+    public void setArtistId(Long artistId) {
         this.artistId = artistId;
     }
 

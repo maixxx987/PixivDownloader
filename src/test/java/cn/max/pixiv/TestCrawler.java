@@ -41,8 +41,8 @@ public class TestCrawler {
     @Test
     public void testMultiPic() throws InterruptedException {
         ThreadPool.crawlerPool.execute(new CrawlerThread(new Image(74751807)));
-        ThreadPool.crawlerPool.execute(new CrawlerThread(new Image(76138376)));
-        ThreadPool.crawlerPool.execute(new CrawlerThread(new Image(73355358)));
+//        ThreadPool.crawlerPool.execute(new CrawlerThread(new Image(76138376)));
+//        ThreadPool.crawlerPool.execute(new CrawlerThread(new Image(73355358)));
 
         ThreadPool.crawlerPool.shutdown();
         try {
