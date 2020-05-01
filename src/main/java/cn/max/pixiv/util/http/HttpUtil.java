@@ -99,9 +99,6 @@ public class HttpUtil {
 
 //        httpPost.setConfig(HttpConfig.setRequestConfig());
 
-        CloseableHttpResponse response = null;
-        String resultString = null;
-
         FileBody file = new FileBody(new File(filePath));
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -112,9 +109,8 @@ public class HttpUtil {
         HttpEntity reqEntity = builder.build();
         httpPost.setEntity(reqEntity);
 
-        // 发起请求 并返回请求的响应
-        response = HttpConfig.getHttpClient().execute(httpPost);
-        resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+        CloseableHttpResponse response = HttpConfig.getHttpClient().execute(httpPost);
+        String  resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
         EntityUtils.consume(response.getEntity());
         return resultString;
     }
