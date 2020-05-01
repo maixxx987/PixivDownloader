@@ -2,7 +2,8 @@ package cn.max.pixiv.common;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * @author MaxStar
@@ -15,14 +16,4 @@ public class ThreadPool {
      */
     public static ScheduledExecutorService scheduledPool = new ScheduledThreadPoolExecutor(1,
             new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build());
-
-    /**
-     * crawler pool
-     */
-    public static ExecutorService crawlerPool = new ThreadPoolExecutor(3,
-            10,
-            5 * 1000,
-            TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(),
-            new BasicThreadFactory.Builder().namingPattern("crawler-pool-%d").daemon(true).build());
 }

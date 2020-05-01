@@ -2,6 +2,7 @@ package cn.max.pixiv.util.http;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -56,6 +57,8 @@ public class HttpConfig {
 
     private static CloseableHttpClient httpClient;
 
+    private static HttpHost proxy = null;
+
     private static final Object LOCK = new Object();
 
 
@@ -82,16 +85,16 @@ public class HttpConfig {
         connectionManager.setDefaultMaxPerRoute(5);
 
         // httpClient配置
-        RequestConfig defaultRequestConfig = RequestConfig.custom()
-                .setProxy(proxy)
-                .setConnectionRequestTimeout(HttpConfig.GET_CONNECTION_TIME_OUT)
-                .setConnectTimeout(HttpConfig.CONNECTION_TIME_OUT)
-                .setSocketTimeout(HttpConfig.SOCKET_TIME_OUT)
-                .build();
+//        RequestConfig defaultRequestConfig = RequestConfig.custom()
+//                .setProxy(proxy)
+//                .setConnectionRequestTimeout(HttpConfig.GET_CONNECTION_TIME_OUT)
+//                .setConnectTimeout(HttpConfig.CONNECTION_TIME_OUT)
+//                .setSocketTimeout(HttpConfig.SOCKET_TIME_OUT)
+//                .build();
 
         return HttpClients.custom()
                 .setConnectionManager(connectionManager)
-                .setDefaultRequestConfig(defaultRequestConfig)
+//                .setDefaultRequestConfig(defaultRequestConfig)
                 .build();
     }
 
@@ -102,9 +105,9 @@ public class HttpConfig {
      * @return httpClient
      */
     static CloseableHttpClient getHttpClient() {
-        if (httpClient == null){
-            synchronized (LOCK){
-                if (httpClient == null){
+        if (httpClient == null) {
+            synchronized (LOCK) {
+                if (httpClient == null) {
                     httpClient = createHttpClient();
                     scheduledPool.scheduleAtFixedRate(() -> {
                         connectionManager.closeExpiredConnections();
@@ -114,6 +117,27 @@ public class HttpConfig {
             }
         }
         return httpClient;
+    }
+
+    public static void setProxy(String host, Integer port) {
+        proxy = new HttpHost(host, port);
+    }
+
+
+    /**
+     * 设置config
+     */
+    static RequestConfig setRequestConfig() {
+        RequestConfig.Builder configBuilder = RequestConfig.custom()
+                .setConnectionRequestTimeout(HttpConfig.GET_CONNECTION_TIME_OUT)
+                .setConnectTimeout(HttpConfig.CONNECTION_TIME_OUT)
+                .setSocketTimeout(HttpConfig.SOCKET_TIME_OUT);
+
+        if (proxy != null) {
+            configBuilder.setProxy(proxy);
+        }
+
+        return configBuilder.build();
     }
 
 }

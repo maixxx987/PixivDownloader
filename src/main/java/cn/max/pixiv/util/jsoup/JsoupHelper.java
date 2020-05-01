@@ -1,17 +1,15 @@
 package cn.max.pixiv.util.jsoup;
 
-import cn.max.pixiv.entity.Image;
-import cn.max.pixiv.util.http.HttpUtil;
-import cn.max.pixiv.util.io.IOUtil;
+import cn.max.pixiv.common.Constant;
+import cn.max.pixiv.entity.PixivImage;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +30,7 @@ public class JsoupHelper {
      * @param id      picture ID
      * @return
      */
-    public static String parseImgOriginUrl(String content, String id) {
+    public static void parseImgInfo(String content, PixivImage image) {
         Document doc = Jsoup.parse(content);
 
         // origin url json string
@@ -40,10 +38,31 @@ public class JsoupHelper {
 
         JSONObject preLoadDataJsonObject = JSON.parseObject(preLoadDataJsonStr);
 
+        JSONObject imgInfo = preLoadDataJsonObject.getJSONObject("illust").getJSONObject(String.valueOf(image.getImgId()));
+        image.setImgTitle(imgInfo.getString("illustTitle"));
+        long userId = imgInfo.getLong("userId");
+        image.setArtistId(userId);
+        image.setArtistName(imgInfo.getString("userName"));
+        image.setArtistUrl(Constant.USER_URL_PREFIX + userId);
+
+        JSONArray tags = imgInfo.getJSONObject("tags").getJSONArray("tags");
+        if (tags != null && tags.size() > 0) {
+            List<String> tagList = new ArrayList<>();
+            for (Object o : tags) {
+                JSONObject tag = (JSONObject) o;
+                String tagStr = tag.getString("tag");
+                if (tag.getJSONObject("translation") != null && tag.getJSONObject("translation").getString("en") != null) {
+                    tagStr = tagStr + " / " + tag.getJSONObject("translation").getString("en");
+                }
+                tagList.add(tagStr);
+            }
+            image.setTagList(tagList);
+        }
+
         // illust -> urls -> original
-        String originSrc = preLoadDataJsonObject.getJSONObject("illust").getJSONObject(id).getJSONObject("urls").getString("original");
-        System.out.println(originSrc);
-        return originSrc;
+        image.setImgOriginUrl(imgInfo.getJSONObject("urls").getString("original"));
+
+        image.setImgComment(doc.select("meta[name=description]").get(0).attr("content"));
     }
 
 
@@ -51,13 +70,14 @@ public class JsoupHelper {
      * 解析SauceNAO
      *
      * @param content url
-     * @return
+     * @return 来自pixiv的图片合集
      */
-    public static List<Image> parseSauceNAO(String content) throws IOException {
-        List<Image> list = new ArrayList<>();
+    public static List<Integer> parseSauceNAO(String content)  {
         Document doc = Jsoup.parse(content);
         Elements resultsDiv = doc.select("div[class=result]");
+        List<Integer> idList = null;
         if (resultsDiv != null && resultsDiv.size() > 0) {
+            idList = new ArrayList<>();
             for (Element div : resultsDiv) {
                 Element resultContentColumnDiv = div.select("div[class=resultcontentcolumn]").first();
                 if (resultContentColumnDiv != null) {
@@ -65,27 +85,11 @@ public class JsoupHelper {
 
                     // 判断是否来自Pixiv
                     if (strong != null && strong.text().contains("Pixiv")) {
-                        Image image = new Image();
-                        image.setId(Long.parseLong(resultContentColumnDiv.select("a[class=linkify]").first().text()));
-
-                        Element artistInfo = resultContentColumnDiv.select("a[class=linkify]").last();
-                        String artistHref = artistInfo.attr("href");
-                        image.setArtistUrl(artistHref);
-                        image.setArtistName(artistInfo.text());
-                        image.setArtistId(Long.parseLong(artistHref.substring(artistHref.indexOf("=") + 1)));
-
-                        // 缩略图
-//                String simpleImgUrl = div.select("img").first().attr("src");
-//                InputStream simpleImage = HttpUtil.getInputStream(simpleImgUrl, null);
-//                String fileName = div.select("img").first().attr("title");
-//                fileName = fileName.substring(fileName.indexOf("-") + 2);
-
-                        list.add(image);
+                        idList.add(Integer.parseInt(resultContentColumnDiv.select("a[class=linkify]").first().text()));
                     }
                 }
             }
         }
-
-        return list;
+        return idList;
     }
 }

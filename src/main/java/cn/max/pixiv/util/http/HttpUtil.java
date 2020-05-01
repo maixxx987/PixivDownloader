@@ -1,18 +1,13 @@
 package cn.max.pixiv.util.http;
 
 import cn.max.pixiv.common.Constant;
-import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import java.io.File;
@@ -44,25 +39,21 @@ public class HttpUtil {
         httpGet.addHeader("accept-language", Constant.ACCEPT_LANGUAGE);
         httpGet.addHeader("user-agent", Constant.USER_AGENT);
 
+        httpGet.setConfig(HttpConfig.setRequestConfig());
+
         if (headers != null && !headers.isEmpty()) {
             headers.forEach(httpGet::addHeader);
         }
 
         CloseableHttpResponse response = HttpConfig.getHttpClient().execute(httpGet);
 
+        // todo 判断404
         if (response.getStatusLine().getStatusCode() == STATUS_CODE_NOT_FOUND) {
-            System.out.println("status code :" + response.getStatusLine().getStatusCode());
+//            System.out.println("status code :" + response.getStatusLine().getStatusCode());
             return null;
         }
 
-        HttpEntity entity = response.getEntity();
-
-        if (entity == null) {
-            System.out.println("entity is null");
-            return null;
-        }
-
-        return entity;
+        return response.getEntity();
     }
 
     /**
@@ -93,47 +84,38 @@ public class HttpUtil {
     public static InputStream getInputStream(String url, Map<String, String> headers) throws IOException {
         HttpEntity entity = httpGet(url, headers);
         if (entity != null) {
-            try {
-                return entity.getContent();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("get inputStream error");
-                return null;
-            }
+            return entity.getContent();
         } else {
             return null;
         }
     }
 
-    public static String uploadFile(String url, String filePath) {
+    public static String uploadFile(String url, String filePath) throws IOException {
         HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader("Accept", Constant.ACCEPT);
         httpPost.addHeader("Accept-Encoding", Constant.ACCEPT_ENCODING);
         httpPost.addHeader("Accept-Language", Constant.ACCEPT_LANGUAGE);
         httpPost.addHeader("User-Agent", Constant.USER_AGENT);
 
+//        httpPost.setConfig(HttpConfig.setRequestConfig());
+
         CloseableHttpResponse response = null;
         String resultString = null;
-        try {
-            FileBody file = new FileBody(new File(filePath));
 
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addPart("file", file);
-            builder.setCharset(StandardCharsets.UTF_8);
-            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        FileBody file = new FileBody(new File(filePath));
 
-            HttpEntity reqEntity = builder.build();
-            httpPost.setEntity(reqEntity);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addPart("file", file);
+        builder.setCharset(StandardCharsets.UTF_8);
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
-            // 发起请求 并返回请求的响应
-            response = HttpConfig.getHttpClient().execute(httpPost);
-            resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-            EntityUtils.consume(response.getEntity());
+        HttpEntity reqEntity = builder.build();
+        httpPost.setEntity(reqEntity);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        // 发起请求 并返回请求的响应
+        response = HttpConfig.getHttpClient().execute(httpPost);
+        resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+        EntityUtils.consume(response.getEntity());
         return resultString;
     }
 }

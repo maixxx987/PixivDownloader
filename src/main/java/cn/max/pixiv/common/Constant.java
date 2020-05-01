@@ -1,6 +1,8 @@
 package cn.max.pixiv.common;
 
 /**
+ * 常量
+ *
  * @author MaxStar
  * @date 2019/5/16
  */
@@ -13,9 +15,22 @@ public class Constant {
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36";
 
     /**
-     * picture url
+     * pixiv picture url
      */
     public static final String THUMBNAIL_URL_PREFIX = "https://www.pixiv.net/artworks/";
 
+    /**
+     * user url
+     */
+    public static final String USER_URL_PREFIX = "https://www.pixiv.net/users/";
 
+    /**
+     * sauceNAO url
+     */
+    public static final String SAUCENAO_URL = "https://saucenao.com/search.php";
+
+    /**
+     * file RegEx
+     */
+    public static final String FILE_REG = "^([a-zA-Z]:)?\\\\.*\\.(JPEG|jpeg|JPG|jpg|PNG|png)$";
 }
