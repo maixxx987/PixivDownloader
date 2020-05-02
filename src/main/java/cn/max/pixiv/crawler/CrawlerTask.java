@@ -11,8 +11,8 @@ import cn.max.pixiv.util.jsoup.JsoupHelper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 爬虫具体任务
@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class CrawlerTask {
 
-    public List<Integer> sauceNaoTask(String filePath) {
+    public Set<Integer> sauceNaoTask(String filePath) {
         try {
             return getPicsFromSauceNao(filePath);
         } catch (PixivException | IOException ignored) {
@@ -55,14 +55,14 @@ public class CrawlerTask {
      * @return
      * @throws IOException
      */
-    private List<Integer> getPicsFromSauceNao(String filePath) throws PixivException, IOException {
+    private Set<Integer> getPicsFromSauceNao(String filePath) throws PixivException, IOException {
         if (new File(filePath).exists()) {
             String str = HttpUtil.uploadFile(Constant.SAUCENAO_URL, filePath);
-            List<Integer> idList = JsoupHelper.parseSauceNAO(str);
-            if (idList == null || idList.size() == 0) {
+            Set<Integer> idSet = JsoupHelper.parseSauceNAO(str);
+            if (idSet == null || idSet.size() == 0) {
                 throw new PixivException(PixivExceptionEnum.NOT_FOUND);
             }
-            return idList;
+            return idSet;
         } else {
             throw new PixivException(PixivExceptionEnum.FILE_NOT_FOUND);
         }

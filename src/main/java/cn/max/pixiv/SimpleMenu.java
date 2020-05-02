@@ -7,6 +7,7 @@ import org.apache.http.HttpHost;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -78,9 +79,9 @@ public class SimpleMenu {
 
                 if (Pattern.matches(Constant.FILE_REG, filePath)) {
                     CrawlerTask task = new CrawlerTask();
-                    List<Integer> idList = task.sauceNaoTask(filePath);
-                    if (idList != null && !idList.isEmpty()) {
-                        for (Integer id : idList) {
+                    Set<Integer> idSet = task.sauceNaoTask(filePath);
+                    if (idSet != null && !idSet.isEmpty()) {
+                        for (Integer id : idSet) {
                             task.pixivTask(id);
                         }
                     }

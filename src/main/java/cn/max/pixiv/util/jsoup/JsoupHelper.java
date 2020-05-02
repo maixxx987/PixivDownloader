@@ -11,7 +11,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author MaxStar
@@ -27,7 +29,6 @@ public class JsoupHelper {
      * origin:   https://i.pximg.net/img-original/img/2017/06/20/01/14/35/63472776_p0.png
      *
      * @param content page source
-     * @param id      picture ID
      * @return
      */
     public static void parseImgInfo(String content, PixivImage image) {
@@ -72,12 +73,12 @@ public class JsoupHelper {
      * @param content url
      * @return 来自pixiv的图片合集
      */
-    public static List<Integer> parseSauceNAO(String content)  {
+    public static Set<Integer> parseSauceNAO(String content)  {
         Document doc = Jsoup.parse(content);
         Elements resultsDiv = doc.select("div[class=result]");
-        List<Integer> idList = null;
+        Set<Integer> idSet = null;
         if (resultsDiv != null && resultsDiv.size() > 0) {
-            idList = new ArrayList<>();
+            idSet = new HashSet<>();
             for (Element div : resultsDiv) {
                 Element resultContentColumnDiv = div.select("div[class=resultcontentcolumn]").first();
                 if (resultContentColumnDiv != null) {
@@ -85,11 +86,11 @@ public class JsoupHelper {
 
                     // 判断是否来自Pixiv
                     if (strong != null && strong.text().contains("Pixiv")) {
-                        idList.add(Integer.parseInt(resultContentColumnDiv.select("a[class=linkify]").first().text()));
+                        idSet.add(Integer.parseInt(resultContentColumnDiv.select("a[class=linkify]").first().text()));
                     }
                 }
             }
         }
-        return idList;
+        return idSet;
     }
 }
