@@ -3,6 +3,9 @@ package cn.max.pixiv.util.io;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * @author MaxStar
@@ -29,6 +32,17 @@ public class IOUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public static void createFile(Path path)  {
+        try {
+            Files.createFile(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteFile(Path path) throws IOException {
+        Files.deleteIfExists(path);
     }
 }

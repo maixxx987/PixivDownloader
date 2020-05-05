@@ -12,7 +12,8 @@ public class PixivImage {
     private String imgTitle;
     private String imgUrl;
     private String imgOriginUrl;
-    private String imgComment;
+    private String imgDescription;
+    private Integer pageCount;
     private int currNum = 0;
     private Long artistId;
     private String artistName;
@@ -98,11 +99,19 @@ public class PixivImage {
         this.tagList = tagList;
     }
 
-    public String getImgComment() {
-        return imgComment;
+    public String getImgDescription() {
+        return imgDescription;
     }
 
-    public void setImgComment(String imgComment) {
-        this.imgComment = imgComment;
+    public void setImgDescription(String imgDescription) {
+        this.imgDescription = imgDescription;
+    }
+
+    public Integer getPageCount() {
+        return pageCount;
+    }
+
+    public void setPageCount(Integer pageCount) {
+        this.pageCount = pageCount;
     }
 }

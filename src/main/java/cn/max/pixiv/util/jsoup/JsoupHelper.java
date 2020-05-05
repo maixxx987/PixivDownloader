@@ -41,6 +41,10 @@ public class JsoupHelper {
 
         JSONObject imgInfo = preLoadDataJsonObject.getJSONObject("illust").getJSONObject(String.valueOf(image.getImgId()));
         image.setImgTitle(imgInfo.getString("illustTitle"));
+        String description = imgInfo.getString("description");
+        image.setImgDescription(description.isEmpty() ? "无" : description);
+        image.setPageCount(imgInfo.getInteger("pageCount"));
+
         long userId = imgInfo.getLong("userId");
         image.setArtistId(userId);
         image.setArtistName(imgInfo.getString("userName"));
@@ -63,7 +67,7 @@ public class JsoupHelper {
         // illust -> urls -> original
         image.setImgOriginUrl(imgInfo.getJSONObject("urls").getString("original"));
 
-        image.setImgComment(doc.select("meta[name=description]").get(0).attr("content"));
+//        image.setImgComment(doc.select("meta[name=description]").get(0).attr("content"));
     }
 
 
@@ -73,7 +77,7 @@ public class JsoupHelper {
      * @param content url
      * @return 来自pixiv的图片合集
      */
-    public static Set<Integer> parseSauceNAO(String content)  {
+    public static Set<Integer> parseSauceNAO(String content) {
         Document doc = Jsoup.parse(content);
         Elements resultsDiv = doc.select("div[class=result]");
         Set<Integer> idSet = null;

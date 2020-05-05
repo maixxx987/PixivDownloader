@@ -19,8 +19,8 @@ public class ExceptionAop {
     public void pixivExceptionHandler(Exception exception) {
         if (exception instanceof PixivException) {
             System.out.println("查询图片错误：" + ((PixivException) exception).getDescription());
-        } else if (exception instanceof IOException) {
-            System.out.println("发生网络错误：" + exception.getMessage());
+        } else {
+            System.out.println("发生错误：" + exception.getMessage());
         }
     }
 }

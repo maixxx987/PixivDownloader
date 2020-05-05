@@ -13,6 +13,7 @@ public class Constant {
     public static final String ACCEPT_ENCODING = "gzip, deflate, br";
     public static final String ACCEPT_LANGUAGE = "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36";
+    public static final String MULTIPART_FORM_DATA = "multipart/form-data; boundary=";
 
     /**
      * pixiv picture url
@@ -27,7 +28,8 @@ public class Constant {
     /**
      * sauceNAO url
      */
-    public static final String SAUCENAO_URL = "https://saucenao.com/search.php";
+    public static final String SAUCENAO_URL = "https://saucenao.com";
+    public static final String SAUCENAO_SEARCH_URL = "https://saucenao.com/search.php";
 
     /**
      * file RegEx

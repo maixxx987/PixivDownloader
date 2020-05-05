@@ -1,117 +1,123 @@
 package cn.max.pixiv.util.http;
 
 import cn.max.pixiv.common.Constant;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.util.EntityUtils;
+import cn.max.pixiv.util.io.IOUtil;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author MaxStar
- * @date 2019/5/15
+ * @date 2020/5/3
  */
 public class HttpUtil {
 
     private static final int STATUS_CODE_OK = 200;
-    private static final int STATUS_CODE_NOT_FOUND = 404;
 
-    /**
-     * 创建Http请求(有头文件)
-     *
-     * @param url     请求连接
-     * @param headers 请求头
-     * @return 返回实体
-     */
-    private static HttpEntity httpGet(String url, Map<String, String> headers) throws IOException {
-        HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader("accept", Constant.ACCEPT);
-        httpGet.addHeader("accept-encoding", Constant.ACCEPT_ENCODING);
-        httpGet.addHeader("accept-language", Constant.ACCEPT_LANGUAGE);
-        httpGet.addHeader("user-agent", Constant.USER_AGENT);
-
-        httpGet.setConfig(HttpConfig.setRequestConfig());
+    private static HttpRequest getRequest(String url, Map<String, String> headers) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                // read timeout
+                .timeout(Duration.ofSeconds(10))
+                .header("accept", Constant.ACCEPT)
+                .header("accept-language", Constant.ACCEPT_LANGUAGE)
+                .header("user-agent", Constant.USER_AGENT)
+                .GET();
 
         if (headers != null && !headers.isEmpty()) {
-            headers.forEach(httpGet::addHeader);
+            headers.forEach(builder::header);
         }
 
-        CloseableHttpResponse response = HttpConfig.getHttpClient().execute(httpGet);
+        return builder.build();
+    }
 
-        // todo 判断404
-        if (response.getStatusLine().getStatusCode() == STATUS_CODE_NOT_FOUND) {
-//            System.out.println("status code :" + response.getStatusLine().getStatusCode());
-            return null;
+    public static String httpGet(String url, Map<String, String> headers) throws IOException, InterruptedException {
+        HttpRequest request = getRequest(url, headers);
+        HttpResponse<String> response = HttpClientConfig.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == STATUS_CODE_OK) {
+            return response.body();
         }
+        return null;
+    }
 
-        return response.getEntity();
+
+    public static void download(String url, Map<String, String> headers, String fileDes) throws IOException, InterruptedException {
+        HttpRequest request = getRequest(url, headers);
+        HttpResponse<Path> response = HttpClientConfig.getHttpClient().send(request, HttpResponse.BodyHandlers.ofFile(Path.of(fileDes)));
+
+        if (response.statusCode() != STATUS_CODE_OK) {
+            // 文件不存在则删除
+            IOUtil.deleteFile(Path.of(fileDes));
+        }
+    }
+
+    public static String uploadImg2SauceNAO(String filePath) throws IOException, InterruptedException {
+
+        String boundary = UUID.randomUUID().toString();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(Constant.SAUCENAO_SEARCH_URL))
+//                .timeout(Duration.ofMillis(5000))
+                .header("Accept", Constant.ACCEPT)
+                .header("Accept-Encoding", Constant.ACCEPT_LANGUAGE)
+                .header("User-Agent", Constant.USER_AGENT)
+                .header("Content-Type", Constant.MULTIPART_FORM_DATA + boundary)
+                .POST(setMultipartData(Map.of("file", Path.of(filePath)), boundary))
+                .build();
+
+        HttpResponse<String> response = HttpClientConfig.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == STATUS_CODE_OK) {
+            return response.body();
+        }
+        return null;
     }
 
     /**
-     * 获取页面内容
-     *
-     * @param url 请求连接
-     * @return 页面内容
+     * @link https://stackoverflow.com/questions/56481475/how-to-define-multiple-parameters-for-a-post-request-using-java-11-http-client
      */
-    public static String getContent(String url) throws IOException {
-        HttpEntity entity = httpGet(url, null);
+    private static HttpRequest.BodyPublisher setMultipartData(Map<Object, Object> data, String boundary) throws IOException {
+        // Result request body
+        List<byte[]> byteArrays = new ArrayList<>();
 
-        if (entity != null && entity.getContent() != null) {
-            String content = EntityUtils.toString(entity);
-            EntityUtils.consume(entity);
-            return content;
-        } else {
-            return null;
+        // Separator with boundary
+        byte[] separator = ("--" + boundary + "\r\nContent-Disposition: form-data; name=").getBytes(StandardCharsets.UTF_8);
+
+        // Iterating over data parts
+        for (Map.Entry<Object, Object> entry : data.entrySet()) {
+
+            // Opening boundary
+            byteArrays.add(separator);
+
+            // If value is type of Path (file) append content type with file name and file binaries, otherwise simply append key=value
+            if (entry.getValue() instanceof Path) {
+                Path path = (Path) entry.getValue();
+                String mimeType = Files.probeContentType(path);
+                byteArrays.add(("\"" + entry.getKey() + "\"; filename=\"" + path.getFileName()
+                        + "\"\r\nContent-Type: " + mimeType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+                byteArrays.add(Files.readAllBytes(path));
+                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
+            } else {
+                byteArrays.add(("\"" + entry.getKey() + "\"\r\n\r\n" + entry.getValue() + "\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+            }
         }
 
-    }
+        // Closing boundary
+        byteArrays.add(("--" + boundary + "--").getBytes(StandardCharsets.UTF_8));
 
-    /**
-     * 获取InputStream(转为图片)
-     *
-     * @param url 请求路径
-     * @return inputStream
-     */
-    public static InputStream getInputStream(String url, Map<String, String> headers) throws IOException {
-        HttpEntity entity = httpGet(url, headers);
-        if (entity != null) {
-            return entity.getContent();
-        } else {
-            return null;
-        }
-    }
-
-    public static String uploadFile(String url, String filePath) throws IOException {
-        HttpPost httpPost = new HttpPost(url);
-        httpPost.addHeader("Accept", Constant.ACCEPT);
-        httpPost.addHeader("Accept-Encoding", Constant.ACCEPT_ENCODING);
-        httpPost.addHeader("Accept-Language", Constant.ACCEPT_LANGUAGE);
-        httpPost.addHeader("User-Agent", Constant.USER_AGENT);
-
-//        httpPost.setConfig(HttpConfig.setRequestConfig());
-
-        FileBody file = new FileBody(new File(filePath));
-
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addPart("file", file);
-        builder.setCharset(StandardCharsets.UTF_8);
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-
-        HttpEntity reqEntity = builder.build();
-        httpPost.setEntity(reqEntity);
-
-        CloseableHttpResponse response = HttpConfig.getHttpClient().execute(httpPost);
-        String  resultString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-        EntityUtils.consume(response.getEntity());
-        return resultString;
+        // Serializing as byte array
+        return HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
     }
 }

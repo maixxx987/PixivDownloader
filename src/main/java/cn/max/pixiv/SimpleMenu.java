@@ -2,10 +2,8 @@ package cn.max.pixiv;
 
 import cn.max.pixiv.common.Constant;
 import cn.max.pixiv.crawler.CrawlerTask;
-import cn.max.pixiv.util.http.HttpConfig;
-import org.apache.http.HttpHost;
+import cn.max.pixiv.util.http.HttpClientConfig;
 
-import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -134,7 +132,7 @@ public class SimpleMenu {
                 System.out.println("请输入端口");
                 if (sc.hasNextInt()) {
                     int port = sc.nextInt();
-                    HttpConfig.setProxy(host, port);
+                    HttpClientConfig.setProxy(host, port);
                     break;
                 }
             }

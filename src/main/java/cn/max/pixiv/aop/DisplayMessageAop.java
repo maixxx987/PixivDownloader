@@ -42,7 +42,7 @@ public class DisplayMessageAop {
         System.out.println("图片ID：" + image.getImgId());
         System.out.println("图片名：" + image.getImgTitle());
         System.out.println("图片页面连接：" + image.getImgUrl());
-        System.out.println("图片简介：" + image.getImgComment());
+        System.out.println("图片简介：" + image.getImgDescription());
         System.out.println("图片Tag：" + JSON.toJSONString(image.getTagList()));
         System.out.println("作者ID：" + image.getArtistId());
         System.out.println("作者名：" + image.getArtistName());

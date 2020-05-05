@@ -5,12 +5,10 @@ import cn.max.pixiv.entity.PixivImage;
 import cn.max.pixiv.exception.PixivException;
 import cn.max.pixiv.exception.PixivExceptionEnum;
 import cn.max.pixiv.util.http.HttpUtil;
-import cn.max.pixiv.util.io.IOUtil;
 import cn.max.pixiv.util.jsoup.JsoupHelper;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +23,7 @@ public class CrawlerTask {
     public Set<Integer> sauceNaoTask(String filePath) {
         try {
             return getPicsFromSauceNao(filePath);
-        } catch (PixivException | IOException ignored) {
+        } catch (PixivException | IOException | InterruptedException ignored) {
             return null;
         }
     }
@@ -44,7 +42,7 @@ public class CrawlerTask {
                 image = parse(id);
             }
             download(image);
-        } catch (PixivException | IOException ignored) {
+        } catch (PixivException | IOException | InterruptedException ignored) {
         }
     }
 
@@ -55,9 +53,9 @@ public class CrawlerTask {
      * @return
      * @throws IOException
      */
-    private Set<Integer> getPicsFromSauceNao(String filePath) throws PixivException, IOException {
+    private Set<Integer> getPicsFromSauceNao(String filePath) throws PixivException, IOException, InterruptedException {
         if (new File(filePath).exists()) {
-            String str = HttpUtil.uploadFile(Constant.SAUCENAO_URL, filePath);
+            String str = HttpUtil.uploadImg2SauceNAO(filePath);
             Set<Integer> idSet = JsoupHelper.parseSauceNAO(str);
             if (idSet == null || idSet.size() == 0) {
                 throw new PixivException(PixivExceptionEnum.NOT_FOUND);
@@ -82,8 +80,8 @@ public class CrawlerTask {
 
         String content = null;
         try {
-            content = HttpUtil.getContent(url);
-        } catch (IOException e) {
+            content = HttpUtil.httpGet(url, null);
+        } catch (IOException | InterruptedException e) {
             throw new PixivException(PixivExceptionEnum.NETWORK_ERROR);
         }
 
@@ -105,9 +103,10 @@ public class CrawlerTask {
      * @param pixivImage
      * @throws IOException
      */
-    private void download(PixivImage pixivImage) throws PixivException, IOException {
+    private void download(PixivImage pixivImage) throws IOException, InterruptedException {
         long id = pixivImage.getImgId();
         String originSrc = pixivImage.getImgOriginUrl();
+        int pageCount = pixivImage.getPageCount();
         int currNum = pixivImage.getCurrNum();
 
         int suffixIndex = originSrc.lastIndexOf(".");
@@ -120,18 +119,12 @@ public class CrawlerTask {
             originSrc = prefix + "_p" + currNum + suffix;
         }
 
-        InputStream inputStream = HttpUtil.getInputStream(originSrc, Map.of("Referer", pixivImage.getImgUrl()));
+        while (currNum < pageCount) {
+            HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), (System.getProperty("user.dir") + "\\download\\" + id + "_p" + currNum + suffix));
 
-        while (inputStream != null) {
-            IOUtil.inputStream2Picture(inputStream, (System.getProperty("user.dir") + "\\" + id + "_p" + currNum + suffix));
-
-            // get next picture inputStream
             currNum += 1;
             pixivImage.setCurrNum(currNum);
             originSrc = prefix + "_p" + currNum + suffix;
-
-            // download picture
-            inputStream = HttpUtil.getInputStream(originSrc, Map.of("Referer", pixivImage.getImgUrl()));
         }
     }
 }
