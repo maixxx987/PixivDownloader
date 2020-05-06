@@ -16,7 +16,13 @@ public class HttpClientConfig {
     private static HttpClient httpClient = null;
 
     public static HttpClient getHttpClient() {
-        buildHttpClient();
+        if (httpClient == null) {
+            synchronized (HttpClientConfig.class) {
+                if (httpClient == null) {
+                    buildHttpClient();
+                }
+            }
+        }
         return httpClient;
     }
 
@@ -25,23 +31,17 @@ public class HttpClientConfig {
     }
 
     private static void buildHttpClient(String host, Integer port) {
-        if (httpClient == null) {
-            synchronized (HttpClientConfig.class) {
-                if (httpClient == null) {
-                    HttpClient.Builder builder = HttpClient.newBuilder()
-                            .version(HttpClient.Version.HTTP_2)
-                            // connection timeout
-                            .connectTimeout(Duration.ofSeconds(5))
-                            .executor(ThreadPool.httpPool);
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                // connection timeout
+                .connectTimeout(Duration.ofSeconds(5))
+                .executor(ThreadPool.httpPool);
 
-                    if (host != null && !host.isBlank() && port != null && port != 0) {
-                        builder.proxy(ProxySelector.of(new InetSocketAddress(host, port)));
-                    }
-
-                    httpClient = builder.build();
-                }
-            }
+        if (host != null && !host.isBlank() && port != null && port != 0) {
+            builder.proxy(ProxySelector.of(new InetSocketAddress(host, port)));
         }
+
+        httpClient = builder.build();
     }
 
     public static void setProxy(String host, int port) {

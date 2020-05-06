@@ -5,10 +5,15 @@ import cn.max.pixiv.entity.PixivImage;
 import cn.max.pixiv.exception.PixivException;
 import cn.max.pixiv.exception.PixivExceptionEnum;
 import cn.max.pixiv.util.http.HttpUtil;
+import cn.max.pixiv.util.io.IOUtil;
 import cn.max.pixiv.util.jsoup.JsoupHelper;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +59,7 @@ public class CrawlerTask {
      * @throws IOException
      */
     private Set<Integer> getPicsFromSauceNao(String filePath) throws PixivException, IOException, InterruptedException {
-        if (new File(filePath).exists()) {
+        if (Files.exists(Path.of(filePath))) {
             String str = HttpUtil.uploadImg2SauceNAO(filePath);
             Set<Integer> idSet = JsoupHelper.parseSauceNAO(str);
             if (idSet == null || idSet.size() == 0) {
@@ -74,7 +79,7 @@ public class CrawlerTask {
      * @throws IOException
      */
     public PixivImage parse(Integer id) throws PixivException {
-        String url = Constant.THUMBNAIL_URL_PREFIX + id;
+        String url = Constant.IMG_THUMBNAIL_URL_PREFIX + id;
         PixivImage image = new PixivImage(id);
         image.setImgUrl(url);
 
@@ -112,19 +117,55 @@ public class CrawlerTask {
         int suffixIndex = originSrc.lastIndexOf(".");
         String suffix = originSrc.substring(suffixIndex);
         int _pIndex = originSrc.lastIndexOf("_p");
-        String prefix = originSrc.substring(0, _pIndex);
 
-        // 如果不是首图，则要重新拼接url
-        if (currNum != 0) {
-            originSrc = prefix + "_p" + currNum + suffix;
+        // 如果url中没有_p，则是动图
+        if (_pIndex != -1) {
+            String prefix = originSrc.substring(0, _pIndex);
+
+            // 如果不是首图，则要重新拼接url
+            if (currNum != 0) {
+                originSrc = prefix + "_p" + currNum + suffix;
+            }
+
+            while (currNum < pageCount) {
+                HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), (System.getProperty("user.dir") + "\\download\\" + id + "_p" + currNum + suffix));
+
+                currNum += 1;
+                pixivImage.setCurrNum(currNum);
+                originSrc = prefix + "_p" + currNum + suffix;
+            }
+        } else {
+            downloadGif(pixivImage);
         }
+    }
 
-        while (currNum < pageCount) {
-            HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), (System.getProperty("user.dir") + "\\download\\" + id + "_p" + currNum + suffix));
+    /**
+     * 下载GIF
+     *
+     * @param pixivImage
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void downloadGif(PixivImage pixivImage) throws IOException, InterruptedException {
+        String gifInfoBody = HttpUtil.httpGet(Constant.GIF_URL_PREFIX + pixivImage.getImgId() + Constant.GIF_URL_SUFFIX, null);
 
-            currNum += 1;
-            pixivImage.setCurrNum(currNum);
-            originSrc = prefix + "_p" + currNum + suffix;
+        if (gifInfoBody != null && !gifInfoBody.isBlank()) {
+            JSONObject gifJson = JSON.parseObject(gifInfoBody).getJSONObject("body");
+            String originSrc = gifJson.getString("src").replace("\\", "");
+            int id = pixivImage.getImgId();
+            pixivImage.setImgOriginUrl(originSrc);
+            String zipFilePathOutStr = (System.getProperty("user.dir") + "\\download\\" + id);
+            String zipFilePathStr = zipFilePathOutStr + ".zip";
+
+            HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), zipFilePathStr);
+
+            JSONArray framesArray = gifJson.getJSONArray("frames");
+
+            IOUtil.unZip(zipFilePathStr, zipFilePathOutStr);
+            IOUtil.jpg2Gif(zipFilePathOutStr, zipFilePathOutStr + ".gif", framesArray);
+
+            IOUtil.deleteFile(Path.of(zipFilePathOutStr));
+            IOUtil.deleteFile(Path.of(zipFilePathStr));
         }
     }
 }

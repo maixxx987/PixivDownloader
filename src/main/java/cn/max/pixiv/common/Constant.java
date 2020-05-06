@@ -16,12 +16,18 @@ public class Constant {
     public static final String MULTIPART_FORM_DATA = "multipart/form-data; boundary=";
 
     /**
-     * pixiv picture url
+     * pixiv img url
      */
-    public static final String THUMBNAIL_URL_PREFIX = "https://www.pixiv.net/artworks/";
+    public static final String IMG_THUMBNAIL_URL_PREFIX = "https://www.pixiv.net/artworks/";
 
     /**
-     * user url
+     * pixiv 动图查询地址(包含每张图的帧率)
+     */
+    public static final String GIF_URL_PREFIX = "https://www.pixiv.net/ajax/illust/";
+    public static final String GIF_URL_SUFFIX = "/ugoira_meta";
+
+    /**
+     * pixiv user url
      */
     public static final String USER_URL_PREFIX = "https://www.pixiv.net/users/";
 
