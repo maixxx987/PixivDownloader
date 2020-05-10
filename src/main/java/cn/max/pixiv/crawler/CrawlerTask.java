@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -128,7 +129,7 @@ public class CrawlerTask {
             }
 
             while (currNum < pageCount) {
-                HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), (System.getProperty("user.dir") + "\\download\\" + id + "_p" + currNum + suffix));
+                HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), Constant.properties.getDownloadPath(), id + "_p" + currNum + suffix);
 
                 currNum += 1;
                 pixivImage.setCurrNum(currNum);
@@ -154,10 +155,10 @@ public class CrawlerTask {
             String originSrc = gifJson.getString("src").replace("\\", "");
             int id = pixivImage.getImgId();
             pixivImage.setImgOriginUrl(originSrc);
-            String zipFilePathOutStr = (System.getProperty("user.dir") + "\\download\\" + id);
+            String zipFilePathOutStr = Constant.properties.getDownloadPath() + File.separator + "tempZip_" + id;
             String zipFilePathStr = zipFilePathOutStr + ".zip";
 
-            HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), zipFilePathStr);
+            HttpUtil.download(originSrc, Map.of("Referer", pixivImage.getImgUrl()), Constant.properties.getDownloadPath(), "tempZip_" + id + ".zip");
 
             JSONArray framesArray = gifJson.getJSONArray("frames");
 

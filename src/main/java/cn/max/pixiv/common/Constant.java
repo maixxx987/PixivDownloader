@@ -1,5 +1,7 @@
 package cn.max.pixiv.common;
 
+import cn.max.pixiv.entity.properties.Properties;
+
 /**
  * 常量
  *
@@ -8,6 +10,10 @@ package cn.max.pixiv.common;
  */
 public class Constant {
 
+    /**
+     * 全局配置
+     */
+    public static Properties properties;
 
     public static final String ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
     public static final String ACCEPT_ENCODING = "gzip, deflate, br";

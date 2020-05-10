@@ -19,13 +19,13 @@ public class DisplayMessageAop {
 
     @Before(value = "execution(* cn.max.pixiv.crawler.CrawlerTask.sauceNaoTask(..))")
     public void beforeSauceNao() {
-        System.out.println("开始查询图片地址...");
+        System.out.println("*   开始查询图片地址...");
     }
 
     @Before(value = "execution(* cn.max.pixiv.crawler.CrawlerTask.parse(..))")
     public void beforeParse() {
 //        System.out.println("已查询到图片");
-        System.out.println("开始解析原图地址...");
+        System.out.println("*   开始解析原图地址...");
     }
 
     /**
@@ -38,19 +38,19 @@ public class DisplayMessageAop {
     @Around(value = "execution(* cn.max.pixiv.crawler.CrawlerTask.download(..))")
     public void aroundDownload(ProceedingJoinPoint joinPoint) throws Throwable {
         PixivImage image = (PixivImage) joinPoint.getArgs()[0];
-        System.out.println("===============================================");
-        System.out.println("图片ID：" + image.getImgId());
-        System.out.println("图片名：" + image.getImgTitle());
-        System.out.println("图片页面连接：" + image.getImgUrl());
-        System.out.println("图片简介：" + image.getImgDescription());
-        System.out.println("图片Tag：" + JSON.toJSONString(image.getTagList()));
-        System.out.println("作者ID：" + image.getArtistId());
-        System.out.println("作者名：" + image.getArtistName());
-        System.out.println("作者主页连接：" + image.getArtistUrl());
-        System.out.println("===============================================");
-        System.out.println("开始下载...");
+        System.out.println("************************************************");
+        System.out.println("*   图片ID：" + image.getImgId());
+        System.out.println("*   图片名：" + image.getImgTitle());
+        System.out.println("*   图片页面连接：" + image.getImgUrl());
+        System.out.println("*   图片简介：" + image.getImgDescription());
+        System.out.println("*   图片Tag：" + JSON.toJSONString(image.getTagList()));
+        System.out.println("*   作者ID：" + image.getArtistId());
+        System.out.println("*   作者名：" + image.getArtistName());
+        System.out.println("*   作者主页连接：" + image.getArtistUrl());
+        System.out.println("************************************************");
+        System.out.println("*   开始下载...");
         joinPoint.proceed();
-        System.out.println("下载完成");
-        System.out.println("===============================================");
+        System.out.println("*   下载完成");
+        System.out.println("************************************************");
     }
 }

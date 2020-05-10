@@ -1,20 +1,19 @@
 package cn.max.pixiv.util.io;
 
+import cn.max.pixiv.common.Constant;
+import cn.max.pixiv.entity.properties.Properties;
+import cn.max.pixiv.entity.properties.Proxy;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.w3c.dom.ls.LSOutput;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.FileChannel;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.TreeSet;
-import java.util.zip.ZipFile;
 
 /**
  * @author MaxStar
@@ -44,7 +43,7 @@ public class IOUtil {
     }
 
     /**
-     * 删除文件
+     * 删除文件(包含文件夹)
      *
      * @param path
      * @throws IOException
@@ -117,5 +116,56 @@ public class IOUtil {
             e.addFrame(img);
         }
         e.finish();
+    }
+
+    /**
+     * 编写配置文件
+     *
+     * @throws IOException
+     */
+    public static void writeProperties() {
+        Path path = Path.of(System.getProperty("user.dir") + File.separator + "properties.json");
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");) {
+            if (Files.notExists(path)) {
+                Files.createFile(path);
+            }
+
+            Path downloadPath = Path.of(Constant.properties.getDownloadPath());
+            if (Files.notExists(downloadPath)) {
+                Files.createDirectory(downloadPath);
+            }
+            if (!Constant.properties.getDownloadPath().endsWith(File.separator)) {
+                Constant.properties.setDownloadPath(Constant.properties.getDownloadPath() + File.separator);
+            }
+
+            String jsonStr = Constant.properties.toJsonString();
+            raf.setLength(jsonStr.length());
+            raf.write(jsonStr.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            System.out.println("写入失败");
+        }
+    }
+
+    /**
+     * 加载配置文件，若配置文件不存在则创建配置文件
+     */
+    public static void loadProperties() {
+        Path path = Path.of(System.getProperty("user.dir") + File.separator + "properties.json");
+        Constant.properties = new Properties();
+        if (Files.exists(path)) {
+            File file = path.toFile();
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r");) {
+                byte[] bytes = new byte[(int) file.length()];
+                raf.read(bytes);
+                System.out.println(new String(bytes));
+                JSONObject jsonObject = JSON.parseObject(new String(bytes, StandardCharsets.UTF_8));
+                Constant.properties.setDownloadPath(jsonObject.getString("downloadPath"));
+                Constant.properties.setProxy(JSON.parseObject(jsonObject.getString("proxy"), Proxy.class));
+            } catch (IOException e) {
+                System.out.println("读取配置文件失败：" + e.getMessage());
+            }
+        } else {
+            writeProperties();
+        }
     }
 }

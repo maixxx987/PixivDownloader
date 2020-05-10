@@ -52,9 +52,14 @@ public class HttpUtil {
     }
 
 
-    public static void download(String url, Map<String, String> headers, String fileDes) throws IOException, InterruptedException {
+    public static void download(String url, Map<String, String> headers, String fileDes, String fileName) throws IOException, InterruptedException {
         HttpRequest request = getRequest(url, headers);
-        HttpResponse<Path> response = HttpClientConfig.getHttpClient().send(request, HttpResponse.BodyHandlers.ofFile(Path.of(fileDes)));
+
+        if (Files.notExists(Path.of(fileDes))) {
+            Files.createDirectories(Path.of(fileDes));
+        }
+
+        HttpResponse<Path> response = HttpClientConfig.getHttpClient().send(request, HttpResponse.BodyHandlers.ofFile(Path.of(fileDes + fileName)));
 
         if (response.statusCode() != STATUS_CODE_OK) {
             // 文件不存在则删除

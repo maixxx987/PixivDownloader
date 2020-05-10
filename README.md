@@ -10,12 +10,13 @@
     <li>根据图片ID下载原图</li>
     <li>根据图片ID下载动图</li>
     <li>通过SauceNAO搜原图并下载原图</li>
+    <li>自定义下载路径及proxy</li>
 </ul>
 
 <br />
 
 <h3> 后续开发 </h3>
-<p>目前仅完成基本功能（下载普通图片），后续会追加以下功能</p>
+<p>目前仅完成基本功能，后续会追加以下功能</p>
 <ul>
     <li>下载画师</li>
     <li>下载排行榜</li>
@@ -30,7 +31,8 @@
     <li><a href="http://www.java2s.com/Code/Java/2D-Graphics-GUI/AnimatedGifEncoder.htm">AnimatedGifEncoder</a></li>
     <li><a href="https://commons.apache.org/">Apache Commons</a></li>
     <li><a href="http://www.eclipse.org/aspectj/">AspectJ</a></li>
-    <li><a href="https://github.com/alibaba/fastjson">FastJson</a></li>
+    <li><a href="http://cliche.sourceforge.net/">cliche</a></li>
+    <li><a href="https://github.com/alibaba/fastjson">fastjson</a></li>
     <li><a href="https://jsoup.org/">Jsoup</a></li>
     <li><a href="https://junit.org/junit5/">Junit5</a></li>
 </ul>

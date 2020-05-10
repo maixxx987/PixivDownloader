@@ -1,5 +1,6 @@
 package cn.max.pixiv.util.http;
 
+import cn.max.pixiv.common.Constant;
 import cn.max.pixiv.common.ThreadPool;
 
 import java.net.InetSocketAddress;
@@ -19,32 +20,36 @@ public class HttpClientConfig {
         if (httpClient == null) {
             synchronized (HttpClientConfig.class) {
                 if (httpClient == null) {
-                    buildHttpClient();
+                    initHttpClient();
                 }
             }
         }
         return httpClient;
     }
 
-    private static void buildHttpClient() {
-        buildHttpClient(null, null);
-    }
-
-    private static void buildHttpClient(String host, Integer port) {
+    private static void initHttpClient() {
         HttpClient.Builder builder = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 // connection timeout
                 .connectTimeout(Duration.ofSeconds(5))
                 .executor(ThreadPool.httpPool);
 
-        if (host != null && !host.isBlank() && port != null && port != 0) {
+        String host = Constant.properties.getProxy().getHost();
+        Integer port = Constant.properties.getProxy().getPort();
+
+        if (!host.isBlank() && port != -1) {
             builder.proxy(ProxySelector.of(new InetSocketAddress(host, port)));
         }
 
         httpClient = builder.build();
     }
 
-    public static void setProxy(String host, int port) {
-        buildHttpClient(host, port);
+    /**
+     * 重新生成HttpClient
+     */
+    public static void rebuildHttpClient() {
+        if (httpClient != null) {
+            initHttpClient();
+        }
     }
 }
